@@ -65,7 +65,7 @@ function handleSignoutClick() {
 
 async function addEventsToCalendar() {
     const events = JSON.parse(document.getElementById('output').innerText);
-    
+
     // Define an array of colorIds to cycle through
     const colorIds = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11'];
     let colorIndex = 0; // Start with the first colorId
@@ -75,15 +75,27 @@ async function addEventsToCalendar() {
             // Set colorId for the event
             event.colorId = colorIds[colorIndex % colorIds.length]; // Cycle through colors
 
+            // Add detailed logging for debugging
+            console.log('Event to be created:', event);
+
             const response = await gapi.client.calendar.events.insert({
                 'calendarId': 'primary',
                 'resource': event,
             });
-            console.log('Event created: ' + response.result.htmlLink);
+
+            console.log('Event created: ', response);
+            if (response.result) {
+                console.log('Event created: ' + response.result.htmlLink);
+            } else {
+                console.error('Event creation failed: ', response);
+            }
 
             colorIndex++; // Move to the next colorId
         } catch (error) {
             console.error('Error creating event', error);
+            if (error.result) {
+                console.error('Detailed error:', error.result.error);
+            }
         }
     }
 }
@@ -95,11 +107,12 @@ document.addEventListener('DOMContentLoaded', () => {
     gisLoaded();
 });
 
+
 function parseSchedule() {
-    const startDateInput = document.getElementById('startDateInput').value; // Get start date input value
-    const endDateInput = document.getElementById('endDateInput').value; // Get end date input value
-    const startDate = new Date(startDateInput); // Convert start date input to Date object
-    const endDate = new Date(endDateInput); // Convert end date input to Date object
+    const startDateInput = document.getElementById('startDateInput').value;
+    const endDateInput = document.getElementById('endDateInput').value;
+    const startDate = new Date(startDateInput);
+    const endDate = new Date(endDateInput);
 
     const scheduleInput = document.getElementById('scheduleInput').value;
     const lines = scheduleInput.split('\n').filter(line => line.trim() !== '');
@@ -116,40 +129,58 @@ function parseSchedule() {
             const [startTime, endTime] = timeInfo;
             const [startHours, startMinutes] = convertTo24Hour(startTime);
             const [endHours, endMinutes] = convertTo24Hour(endTime);
+
+            // Ensure the startDateInstance and endDateInstance are set correctly
             const startDateInstance = new Date(startDate);
             startDateInstance.setHours(startHours, startMinutes, 0, 0);
             const endDateInstance = new Date(startDate);
             endDateInstance.setHours(endHours, endMinutes, 0, 0);
 
-            // Calculate recurring events until endDate
-            let currentStartDate = new Date(startDateInstance);
-            while (currentStartDate <= endDate) {
-                days.split('').forEach(day => {
-                    const event = {
-                        summary: `${classInfo[0].trim()} ${classInfo[2].trim()}`,
-                        location: location,
-                        start: {
-                            dateTime: getNextDayOfWeek(currentStartDate, day).toISOString()
-                        },
-                        end: {
-                            dateTime: getNextDayOfWeek(new Date(currentStartDate.getTime() + (endDateInstance.getTime() - startDateInstance.getTime())), day).toISOString()
-                        },
-                        description: instructor
-                    };
-                    events.push(event);
-                });
+            // Convert days to Google Calendar BYDAY format (MO, TU, etc.)
+            const recurrenceDays = days !== 'N/A' && days !== '.' && days !== 'A' ?
+                days.split('').map(day => {
+                    switch (day.toUpperCase()) {
+                        case 'M': return 'MO';
+                        case 'T': return 'TU';
+                        case 'W': return 'WE';
+                        case 'R': return 'TH';
+                        case 'F': return 'FR';
+                        case 'S': return 'SA';
+                        case 'U': return 'SU';
+                        default: return ''; // Handle unexpected cases
+                    }
+                }).filter(day => day !== '').join(',') : '';
 
-                // Move to next week
-                currentStartDate.setDate(currentStartDate.getDate() + 7);
-            }
+            // Calculate UNTIL date in YYYYMMDD format
+            const untilDate = endDate.toISOString().slice(0, 10).replace(/-/g, '');
+
+            // Construct the RRULE with start time included
+            const recurrenceRule = `RRULE:FREQ=WEEKLY;UNTIL=${untilDate};BYDAY=${recurrenceDays};WKST=SU;INTERVAL=1;BYHOUR=${startHours};BYMINUTE=${startMinutes}`;
+
+            const event = {
+                summary: `${classInfo[0].trim()} ${classInfo[2].trim()}`,
+                location: location,
+                start: {
+                    dateTime: startDateInstance.toISOString().slice(0, 19), // Use dateTime instead of date
+                    timeZone: 'America/Chicago' // Adjust timezone as needed
+                },
+                end: {
+                    dateTime: endDateInstance.toISOString().slice(0, 19), // Use dateTime instead of date
+                    timeZone: 'America/Chicago' // Adjust timezone as needed
+                },
+                description: instructor,
+                recurrence: [
+                    recurrenceRule
+                ]
+            };
+
+            events.push(event);
         }
     }
 
     document.getElementById('output').innerText = JSON.stringify(events, null, 2);
     document.getElementById('authButton').style.display = 'block';
 }
-
-
 
 function convertTo24Hour(time) {
     const [hours, minutesPart] = time.split(':');
