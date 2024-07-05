@@ -85,7 +85,12 @@ document.addEventListener('DOMContentLoaded', () => {
     gisLoaded();
 });
 
+let startDate, endDate; // Global variables to hold start and end dates
+
 function parseSchedule() {
+    startDate = new Date(document.getElementById('startDateInput').value);
+    endDate = new Date(document.getElementById('endDateInput').value);
+
     const scheduleInput = document.getElementById('scheduleInput').value;
     const lines = scheduleInput.split('\n').filter(line => line.trim() !== '');
     const events = [];
@@ -101,31 +106,38 @@ function parseSchedule() {
             const [startTime, endTime] = timeInfo;
             const [startHours, startMinutes] = convertTo24Hour(startTime);
             const [endHours, endMinutes] = convertTo24Hour(endTime);
-            const startDate = new Date();
-            startDate.setHours(startHours, startMinutes, 0, 0);
-            const endDate = new Date();
-            endDate.setHours(endHours, endMinutes, 0, 0);
 
-            days.split('').forEach(day => {
-                const event = {
-                    summary: `${classInfo[0].trim()} ${classInfo[2].trim()}`,
-                    location: location,
-                    start: {
-                        dateTime: getNextDayOfWeek(startDate, day).toISOString()
-                    },
-                    end: {
-                        dateTime: getNextDayOfWeek(endDate, day).toISOString()
-                    },
-                    description: instructor
-                };
-                events.push(event);
-            });
+            const startDateTime = getNextDayOfWeek(startDate, days[0]);
+            startDateTime.setHours(startHours, startMinutes, 0, 0);
+
+            const endDateTime = getNextDayOfWeek(startDate, days[0]);
+            endDateTime.setHours(endHours, endMinutes, 0, 0);
+
+            if (startDateTime >= startDate && endDateTime <= endDate) {
+                days.split('').forEach(day => {
+                    const event = {
+                        summary: `${classInfo[0].trim()} ${classInfo[2].trim()}`,
+                        location: location,
+                        start: {
+                            dateTime: startDateTime.toISOString()
+                        },
+                        end: {
+                            dateTime: endDateTime.toISOString()
+                        },
+                        description: instructor
+                    };
+                    events.push(event);
+                });
+            } else {
+                console.warn('Event skipped because it falls outside the specified start and end dates.');
+            }
         }
     }
 
     document.getElementById('output').innerText = JSON.stringify(events, null, 2);
     document.getElementById('authButton').style.display = 'block';
 }
+
 
 function convertTo24Hour(time) {
     const [hours, minutesPart] = time.split(':');

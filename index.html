@@ -2,25 +2,32 @@
 <html>
 <head>
     <title>Class Schedule to Google Calendar</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 50px;
-        }
-        textarea {
-            width: 100%;
-            height: 200px;
-        }
-        button {
-            margin-top: 10px;
-        }
-    </style>
+    <link rel="stylesheet" href="style.css">
+    
 </head>
 <body onload="gapiLoaded(); gisLoaded();">
     <h1>Class Schedule to Google Calendar</h1>
+    <p>
+        <ol>
+            <li>Get your schedule from <a href="https://courses.illinois.edu//"> https://courses.illinois.edu// </a></li>
+            <li>Log in then go to my.Courses on the right</li>
+            <li>Copy and paste your schedule in the box</li>
+            <li>Click the submit button</li>
+            <li>Then authorize your google account to add it to your calender </li>
+
+        </ol>
+        
+    </p>
     <form id="scheduleForm">
+        <label for="startDateInput">Start Date:</label><br>
+        <input type="date" id="startDateInput" required><br><br>
+        
+        <label for="endDateInput">End Date:</label><br>
+        <input type="date" id="endDateInput" required><br><br>
+        
         <label for="scheduleInput">Paste your class schedule:</label><br>
         <textarea id="scheduleInput"></textarea><br><br>
+        
         <button type="button" onclick="parseSchedule()">Submit</button>
     </form>
     <div id="output"></div>
