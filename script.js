@@ -85,11 +85,9 @@ document.addEventListener('DOMContentLoaded', () => {
     gisLoaded();
 });
 
-let startDate, endDate; // Global variables to hold start and end dates
-
 function parseSchedule() {
-    startDate = new Date(document.getElementById('startDateInput').value);
-    endDate = new Date(document.getElementById('endDateInput').value);
+    const startDateInput = document.getElementById('startDateInput').value; // Get start date input value
+    const startDate = new Date(startDateInput); // Convert start date input to Date object
 
     const scheduleInput = document.getElementById('scheduleInput').value;
     const lines = scheduleInput.split('\n').filter(line => line.trim() !== '');
@@ -106,31 +104,25 @@ function parseSchedule() {
             const [startTime, endTime] = timeInfo;
             const [startHours, startMinutes] = convertTo24Hour(startTime);
             const [endHours, endMinutes] = convertTo24Hour(endTime);
+            const startDateInstance = new Date(startDate);
+            startDateInstance.setHours(startHours, startMinutes, 0, 0);
+            const endDateInstance = new Date(startDate);
+            endDateInstance.setHours(endHours, endMinutes, 0, 0);
 
-            const startDateTime = getNextDayOfWeek(startDate, days[0]);
-            startDateTime.setHours(startHours, startMinutes, 0, 0);
-
-            const endDateTime = getNextDayOfWeek(startDate, days[0]);
-            endDateTime.setHours(endHours, endMinutes, 0, 0);
-
-            if (startDateTime >= startDate && endDateTime <= endDate) {
-                days.split('').forEach(day => {
-                    const event = {
-                        summary: `${classInfo[0].trim()} ${classInfo[2].trim()}`,
-                        location: location,
-                        start: {
-                            dateTime: startDateTime.toISOString()
-                        },
-                        end: {
-                            dateTime: endDateTime.toISOString()
-                        },
-                        description: instructor
-                    };
-                    events.push(event);
-                });
-            } else {
-                console.warn('Event skipped because it falls outside the specified start and end dates.');
-            }
+            days.split('').forEach(day => {
+                const event = {
+                    summary: `${classInfo[0].trim()} ${classInfo[2].trim()}`,
+                    location: location,
+                    start: {
+                        dateTime: getNextDayOfWeek(startDateInstance, day).toISOString()
+                    },
+                    end: {
+                        dateTime: getNextDayOfWeek(endDateInstance, day).toISOString()
+                    },
+                    description: instructor
+                };
+                events.push(event);
+            });
         }
     }
 
