@@ -87,7 +87,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function parseSchedule() {
     const startDateInput = document.getElementById('startDateInput').value; // Get start date input value
+    const endDateInput = document.getElementById('endDateInput').value; // Get end date input value
     const startDate = new Date(startDateInput); // Convert start date input to Date object
+    const endDate = new Date(endDateInput); // Convert end date input to Date object
 
     const scheduleInput = document.getElementById('scheduleInput').value;
     const lines = scheduleInput.split('\n').filter(line => line.trim() !== '');
@@ -109,26 +111,34 @@ function parseSchedule() {
             const endDateInstance = new Date(startDate);
             endDateInstance.setHours(endHours, endMinutes, 0, 0);
 
-            days.split('').forEach(day => {
-                const event = {
-                    summary: `${classInfo[0].trim()} ${classInfo[2].trim()}`,
-                    location: location,
-                    start: {
-                        dateTime: getNextDayOfWeek(startDateInstance, day).toISOString()
-                    },
-                    end: {
-                        dateTime: getNextDayOfWeek(endDateInstance, day).toISOString()
-                    },
-                    description: instructor
-                };
-                events.push(event);
-            });
+            // Calculate recurring events until endDate
+            let currentStartDate = new Date(startDateInstance);
+            while (currentStartDate <= endDate) {
+                days.split('').forEach(day => {
+                    const event = {
+                        summary: `${classInfo[0].trim()} ${classInfo[2].trim()}`,
+                        location: location,
+                        start: {
+                            dateTime: getNextDayOfWeek(currentStartDate, day).toISOString()
+                        },
+                        end: {
+                            dateTime: getNextDayOfWeek(new Date(currentStartDate.getTime() + (endDateInstance.getTime() - startDateInstance.getTime())), day).toISOString()
+                        },
+                        description: instructor
+                    };
+                    events.push(event);
+                });
+
+                // Move to next week
+                currentStartDate.setDate(currentStartDate.getDate() + 7);
+            }
         }
     }
 
     document.getElementById('output').innerText = JSON.stringify(events, null, 2);
     document.getElementById('authButton').style.display = 'block';
 }
+
 
 
 function convertTo24Hour(time) {
