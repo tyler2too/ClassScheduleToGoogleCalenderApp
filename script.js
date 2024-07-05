@@ -1,5 +1,5 @@
-let CLIENT_ID = 'YOUR_CLIENT_ID';
-let API_KEY = 'YOUR_API_KEY';
+let CLIENT_ID = '972247015927-uocb4ika9mn940knj91qk6e7r1edsc3i.apps.googleusercontent.com';
+let API_KEY = 'AIzaSyAAIFD7oJZMGXdAH84VeYcFFs1MtAqpoD0';
 let SCOPES = "https://www.googleapis.com/auth/calendar.events";
 
 function handleClientLoad() {
@@ -51,7 +51,6 @@ function addEventsToCalendar() {
 
 document.addEventListener("DOMContentLoaded", handleClientLoad);
 
-
 function parseSchedule() {
     const scheduleInput = document.getElementById('scheduleInput').value;
     const lines = scheduleInput.split('\n').filter(line => line.trim() !== '');
@@ -75,7 +74,7 @@ function parseSchedule() {
 
             days.split('').forEach(day => {
                 const event = {
-                    summary: classInfo[0].trim() + ' ' + classInfo[2].trim(),
+                    summary: `${classInfo[0].trim()} ${classInfo[2].trim()}`,
                     location: location,
                     start: {
                         dateTime: getNextDayOfWeek(startDate, day).toISOString()
@@ -91,6 +90,7 @@ function parseSchedule() {
     }
 
     document.getElementById('output').innerText = JSON.stringify(events, null, 2);
+    document.getElementById('authButton').style.display = 'block';
 }
 
 function convertTo24Hour(time) {
