@@ -65,13 +65,23 @@ function handleSignoutClick() {
 
 async function addEventsToCalendar() {
     const events = JSON.parse(document.getElementById('output').innerText);
+    
+    // Define an array of colorIds to cycle through
+    const colorIds = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11'];
+    let colorIndex = 0; // Start with the first colorId
+
     for (const event of events) {
         try {
+            // Set colorId for the event
+            event.colorId = colorIds[colorIndex % colorIds.length]; // Cycle through colors
+
             const response = await gapi.client.calendar.events.insert({
                 'calendarId': 'primary',
                 'resource': event,
             });
             console.log('Event created: ' + response.result.htmlLink);
+
+            colorIndex++; // Move to the next colorId
         } catch (error) {
             console.error('Error creating event', error);
         }
