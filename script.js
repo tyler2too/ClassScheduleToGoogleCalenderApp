@@ -50,6 +50,7 @@ function handleSignoutClick() {
 function addEventsToCalendar() {
     const events = JSON.parse(document.getElementById('output').innerText);
     events.forEach(event => {
+        console.log('Adding event:', event); // Log event before adding
         gapi.client.calendar.events.insert({
             'calendarId': 'primary',
             'resource': event
