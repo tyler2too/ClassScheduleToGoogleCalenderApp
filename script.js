@@ -15,6 +15,8 @@ function initClient() {
     }).then(function () {
         gapi.auth2.getAuthInstance().isSignedIn.listen(updateSigninStatus);
         updateSigninStatus(gapi.auth2.getAuthInstance().isSignedIn.get());
+    }, function(error) {
+        console.error('Error during client initialization', error);
     });
 }
 
@@ -30,11 +32,19 @@ function updateSigninStatus(isSignedIn) {
 }
 
 function handleAuthClick() {
-    gapi.auth2.getAuthInstance().signIn();
+    gapi.auth2.getAuthInstance().signIn().then(function() {
+        console.log('User signed in');
+    }, function(error) {
+        console.error('Error during sign in', error);
+    });
 }
 
 function handleSignoutClick() {
-    gapi.auth2.getAuthInstance().signOut();
+    gapi.auth2.getAuthInstance().signOut().then(function() {
+        console.log('User signed out');
+    }, function(error) {
+        console.error('Error during sign out', error);
+    });
 }
 
 function addEventsToCalendar() {
@@ -45,6 +55,8 @@ function addEventsToCalendar() {
             'resource': event
         }).then(function(response) {
             console.log('Event created: ' + response.htmlLink);
+        }, function(error) {
+            console.error('Error creating event', error);
         });
     });
 }
