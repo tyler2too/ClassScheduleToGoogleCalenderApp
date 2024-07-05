@@ -1,68 +1,89 @@
-let CLIENT_ID = '972247015927-uocb4ika9mn940knj91qk6e7r1edsc3i.apps.googleusercontent.com';
-let API_KEY = 'AIzaSyAAIFD7oJZMGXdAH84VeYcFFs1MtAqpoD0';
-let SCOPES = "https://www.googleapis.com/auth/calendar.events";
+const CLIENT_ID = '972247015927-uocb4ika9mn940knj91qk6e7r1edsc3i.apps.googleusercontent.com';
+const API_KEY = 'AIzaSyAAIFD7oJZMGXdAH84VeYcFFs1MtAqpoD0';
+const SCOPES = 'https://www.googleapis.com/auth/calendar.events';
 
-function handleClientLoad() {
-    gapi.load('client:auth2', initClient);
+let tokenClient;
+let gapiInited = false;
+let gisInited = false;
+
+function gapiLoaded() {
+    gapi.load('client', initializeGapiClient);
 }
 
-function initClient() {
-    gapi.client.init({
+async function initializeGapiClient() {
+    await gapi.client.init({
         apiKey: API_KEY,
-        clientId: CLIENT_ID,
-        discoveryDocs: ["https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest"],
-        scope: SCOPES
-    }).then(function () {
-        gapi.auth2.getAuthInstance().isSignedIn.listen(updateSigninStatus);
-        updateSigninStatus(gapi.auth2.getAuthInstance().isSignedIn.get());
-    }, function(error) {
-        console.error('Error during client initialization', error);
+        discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest'],
     });
+    gapiInited = true;
+    maybeEnableButtons();
 }
 
-function updateSigninStatus(isSignedIn) {
-    if (isSignedIn) {
-        document.getElementById('authButton').style.display = 'none';
-        document.getElementById('signoutButton').style.display = 'block';
-        addEventsToCalendar();
-    } else {
+function gisLoaded() {
+    tokenClient = google.accounts.oauth2.initTokenClient({
+        client_id: CLIENT_ID,
+        scope: SCOPES,
+        callback: '', // defined later
+    });
+    gisInited = true;
+    maybeEnableButtons();
+}
+
+function maybeEnableButtons() {
+    if (gapiInited && gisInited) {
         document.getElementById('authButton').style.display = 'block';
-        document.getElementById('signoutButton').style.display = 'none';
     }
 }
 
 function handleAuthClick() {
-    gapi.auth2.getAuthInstance().signIn().then(function() {
-        console.log('User signed in');
-    }, function(error) {
-        console.error('Error during sign in', error);
-    });
+    tokenClient.callback = async (resp) => {
+        if (resp.error !== undefined) {
+            throw (resp);
+        }
+        document.getElementById('signoutButton').style.display = 'block';
+        addEventsToCalendar();
+    };
+
+    if (gapi.client.getToken() === null) {
+        // Prompt the user to select a Google Account and ask for consent to share their data
+        tokenClient.requestAccessToken({prompt: 'consent'});
+    } else {
+        // Skip display of account chooser and consent dialog for an existing session
+        tokenClient.requestAccessToken({prompt: ''});
+    }
 }
 
 function handleSignoutClick() {
-    gapi.auth2.getAuthInstance().signOut().then(function() {
-        console.log('User signed out');
-    }, function(error) {
-        console.error('Error during sign out', error);
-    });
-}
-
-function addEventsToCalendar() {
-    const events = JSON.parse(document.getElementById('output').innerText);
-    events.forEach(event => {
-        console.log('Adding event:', event); // Log event before adding
-        gapi.client.calendar.events.insert({
-            'calendarId': 'primary',
-            'resource': event
-        }).then(function(response) {
-            console.log('Event created: ' + response.htmlLink);
-        }, function(error) {
-            console.error('Error creating event', error);
+    const token = gapi.client.getToken();
+    if (token !== null) {
+        google.accounts.oauth2.revoke(token.access_token, () => {
+            gapi.client.setToken('');
+            document.getElementById('signoutButton').style.display = 'none';
         });
-    });
+    }
 }
 
-document.addEventListener("DOMContentLoaded", handleClientLoad);
+async function addEventsToCalendar() {
+    const events = JSON.parse(document.getElementById('output').innerText);
+    for (const event of events) {
+        try {
+            const response = await gapi.client.calendar.events.insert({
+                'calendarId': 'primary',
+                'resource': event,
+            });
+            console.log('Event created: ' + response.result.htmlLink);
+        } catch (error) {
+            console.error('Error creating event', error);
+        }
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('authButton').onclick = handleAuthClick;
+    document.getElementById('signoutButton').onclick = handleSignoutClick;
+    gapiLoaded();
+    gisLoaded();
+});
 
 function parseSchedule() {
     const scheduleInput = document.getElementById('scheduleInput').value;

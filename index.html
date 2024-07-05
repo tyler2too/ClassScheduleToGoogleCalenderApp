@@ -16,7 +16,7 @@
         }
     </style>
 </head>
-<body>
+<body onload="gapiLoaded(); gisLoaded();">
     <h1>Class Schedule to Google Calendar</h1>
     <form id="scheduleForm">
         <label for="scheduleInput">Paste your class schedule:</label><br>
@@ -24,9 +24,10 @@
         <button type="button" onclick="parseSchedule()">Submit</button>
     </form>
     <div id="output"></div>
-    <button id="authButton" style="display: none;" onclick="handleAuthClick()">Authorize Google Calendar</button>
-    <button id="signoutButton" style="display: none;" onclick="handleSignoutClick()">Sign Out</button>
+    <button id="authButton" style="display: none;">Authorize Google Calendar</button>
+    <button id="signoutButton" style="display: none;">Sign Out</button>
+    <script src="https://apis.google.com/js/api.js"></script>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="script.js"></script>
 </body>
-<script src="https://apis.google.com/js/api.js"></script>
-<script src="script.js"></script>
 </html>
