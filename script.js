@@ -219,7 +219,7 @@ function parseSchedule() {
 
 
 //
-// Gives success or error message & adds color to event/classes in Google Calendar
+// Adds color to event/classes in Google Calendar & outputs success or error message
 //
 async function addEventsToCalendar(events) {
     const colorIds = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11']; // Only 11 color options
