@@ -1,14 +1,32 @@
+/////////////////////////
+//
+// Class Schedule To Google Calendar
+// Used Google Calendar API and OAuth2.0 authentication (Connect to google account)
+//
+/////////////////////////
+//
+// Tyler Too
+// July 2024
+// Inspiration/Motivation -> No internship -> Personal Project
+// Any recruiter reading this please hire me
+// tyler.hzt@gmail.com
+//
+/////////////////////////
+
+
 const CLIENT_ID = '972247015927-uocb4ika9mn940knj91qk6e7r1edsc3i.apps.googleusercontent.com';
-const API_KEY = 'AIzaSyD8eZ_7kBv8Ge--q9UkqQuWt5C29nOxty4';
+const API_KEY = 'AIzaSyD8eZ_7kBv8Ge--q9UkqQuWt5C29nOxty4'; // Please dont hack me (It's restricted through google)
 const SCOPES = 'https://www.googleapis.com/auth/calendar.events';
 
-let tokenClient;
-let gapiInited = false;
-let gisInited = false;
+let tokenClient;            // OAuth 2.0 token (user authentication)
+let gapiInited = false;     // Check for Google API library initialization
+let gisInited = false;      // Check for Google Identity services library initialization
+
 
 function gapiLoaded() {
     gapi.load('client', initializeGapiClient);
 }
+
 
 async function initializeGapiClient() {
     await gapi.client.init({
@@ -18,6 +36,7 @@ async function initializeGapiClient() {
     gapiInited = true;
     maybeEnableButton();
 }
+
 
 function gisLoaded() {
     tokenClient = google.accounts.oauth2.initTokenClient({
@@ -29,14 +48,19 @@ function gisLoaded() {
     maybeEnableButton();
 }
 
+
 function maybeEnableButton() {
     if (gapiInited && gisInited) {
         document.getElementById('submitButton').style.display = 'block';
     }
 }
 
+
+//
+// Submit and Authorization button
+//
 async function handleAuthAndSubmitClick() {
-    const events = parseSchedule(); // Parse the schedule and prepare the events
+    const events = parseSchedule(); // Parse the schedule and prepare the events/classes
 
     tokenClient.callback = async (resp) => {
         if (resp.error !== undefined) {
@@ -52,8 +76,153 @@ async function handleAuthAndSubmitClick() {
     }
 }
 
+//
+// Show success or error message
+//
+function showMessage(type, message) {
+    const outputElement = document.getElementById('output');
+    const messageElement = document.createElement('div');
+    messageElement.classList.add(type === 'error' ? 'error-message' : 'success-message');
+    messageElement.textContent = message;
+    outputElement.appendChild(messageElement);
+}
+
+
+function toggleHint() {
+    const hintText = document.getElementById('hintText');
+    if (hintText.style.display === 'none') {
+        hintText.style.display = 'block';
+    } else {
+        hintText.style.display = 'none';
+    }
+}
+
+
+function formatDateTime(date) {
+    const year = date.getFullYear();
+    const month = ('0' + (date.getMonth() + 1)).slice(-2);
+    const day = ('0' + date.getDate()).slice(-2);
+    const hours = ('0' + date.getHours()).slice(-2);
+    const minutes = ('0' + date.getMinutes()).slice(-2);
+    const seconds = ('0' + date.getSeconds()).slice(-2);
+
+    const formattedDateTime = `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
+
+    return formattedDateTime;
+}
+
+
+//
+// Time needs to be in military time format
+//
+function convertTo24Hour(time) {
+    const [hours, minutesPart] = time.split(':');
+    const minutes = minutesPart.substring(0, 2);
+    const period = minutesPart.substring(2).trim().toUpperCase();
+    let hours24 = parseInt(hours, 10);
+    if (period === 'PM' && hours24 < 12) hours24 += 12;
+    if (period === 'AM' && hours24 === 12) hours24 = 0;
+    return [hours24, parseInt(minutes, 10)];
+}
+
+
+function getNextDayOfWeek(date, day) {
+    const dayMap = { 'M': 1, 'T': 2, 'W': 3, 'R': 4, 'F': 5, 'S': 6, 'U': 0 };
+    const resultDate = new Date(date);
+    resultDate.setDate(date.getDate() + (dayMap[day] + 7 - date.getDay()) % 7);
+    return resultDate;
+}
+
+
+//
+// Main script for getting the Class Schedule to Google Cal
+//
+function parseSchedule() {
+    const startDateInput = document.getElementById('startDateInput').value;
+    const endDateInput = document.getElementById('endDateInput').value;
+    const startDate = new Date(startDateInput);
+    const endDate = new Date(endDateInput);
+
+    const scheduleInput = document.getElementById('scheduleInput').value;
+    const lines = scheduleInput.split('\n').filter(line => line.trim() !== '');
+    const events = [];
+
+    const startDayOfWeek = startDate.getDay();
+
+    for (let i = 0; i < lines.length; i += 7) {        // Parse schedule
+        const classInfo = lines[i].split('\t');
+        const timeInfo = lines[i + 3].split(' - ');
+        const days = lines[i + 4].trim();
+        const location = lines[i + 5].trim();
+        const instructor = lines[i + 6].trim();
+
+        if (timeInfo.length === 2 && days !== 'ARRANGED') {
+            const [startTime, endTime] = timeInfo;
+            const [startHours, startMinutes] = convertTo24Hour(startTime);
+            const [endHours, endMinutes] = convertTo24Hour(endTime);
+
+            // Starts schedule where user chooses
+            // This is so classes arent created on the same day
+            let startDateInstance;
+            if (days.includes('M') && startDayOfWeek === 1) {
+                startDateInstance = new Date(startDate);
+            } else {
+                startDateInstance = getNextDayOfWeek(startDate, days.charAt(0));
+            }
+            startDateInstance.setHours(startHours, startMinutes, 0, 0);
+
+            const endDateInstance = new Date(startDateInstance);
+            endDateInstance.setHours(endHours, endMinutes, 0, 0);
+
+            const recurrenceDays = days !== 'N/A' && days !== '.' && days !== 'A' ? // Change to Google Cal API format
+                days.split('').map(day => {
+                    switch (day.toUpperCase()) {
+                        case 'M': return 'MO';
+                        case 'T': return 'TU';
+                        case 'W': return 'WE';
+                        case 'R': return 'TH';
+                        case 'F': return 'FR';
+                        case 'S': return 'SA';
+                        case 'U': return 'SU';
+                        default: return '';
+                    }
+                }).filter(day => day !== '').join(',') : '';
+
+            const untilDate = endDate.toISOString().slice(0, 10).replace(/-/g, '');
+            
+            // Google Cal API feature to create event specifics 
+            const recurrenceRule = `RRULE:FREQ=WEEKLY;UNTIL=${untilDate};BYDAY=${recurrenceDays};WKST=SU;INTERVAL=1;BYHOUR=${startHours};BYMINUTE=${startMinutes}`;
+            
+            const event = {
+                summary: `${classInfo[0].trim()} ${classInfo[2].trim()}`,
+                location: location,
+                start: {
+                    dateTime: formatDateTime(startDateInstance),
+                    timeZone: 'America/Chicago'
+                },
+                end: {
+                    dateTime: formatDateTime(endDateInstance),
+                    timeZone: 'America/Chicago'
+                },
+                description: instructor,
+                recurrence: [
+                    recurrenceRule
+                ]
+            };
+
+            events.push(event);
+        }
+    }
+
+    return events;
+}
+
+
+//
+// Gives success or error message & adds color to event/classes in Google Calendar
+//
 async function addEventsToCalendar(events) {
-    const colorIds = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11'];
+    const colorIds = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11']; // Only 11 color options
     let colorIndex = 0;
 
     try {
@@ -86,123 +255,12 @@ async function addEventsToCalendar(events) {
 }
 
 
-function showMessage(type, message) {
-    const outputElement = document.getElementById('output');
-    const messageElement = document.createElement('div');
-    messageElement.classList.add(type === 'error' ? 'error-message' : 'success-message');
-    messageElement.textContent = message;
-    outputElement.appendChild(messageElement);
-}
-
+//
+// HTML to JS link
+//
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('submitButton').onclick = handleAuthAndSubmitClick;
+    document.getElementById('hintButton').onclick = toggleHint;
     gapiLoaded();
     gisLoaded();
 });
-
-function formatDateTime(date) {
-    const year = date.getFullYear();
-    const month = ('0' + (date.getMonth() + 1)).slice(-2);
-    const day = ('0' + date.getDate()).slice(-2);
-    const hours = ('0' + date.getHours()).slice(-2);
-    const minutes = ('0' + date.getMinutes()).slice(-2);
-    const seconds = ('0' + date.getSeconds()).slice(-2);
-
-    const formattedDateTime = `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
-
-    return formattedDateTime;
-}
-
-function parseSchedule() {
-    const startDateInput = document.getElementById('startDateInput').value;
-    const endDateInput = document.getElementById('endDateInput').value;
-    const startDate = new Date(startDateInput);
-    const endDate = new Date(endDateInput);
-
-    const scheduleInput = document.getElementById('scheduleInput').value;
-    const lines = scheduleInput.split('\n').filter(line => line.trim() !== '');
-    const events = [];
-
-    const startDayOfWeek = startDate.getDay();
-
-    for (let i = 0; i < lines.length; i += 7) {
-        const classInfo = lines[i].split('\t');
-        const timeInfo = lines[i + 3].split(' - ');
-        const days = lines[i + 4].trim();
-        const location = lines[i + 5].trim();
-        const instructor = lines[i + 6].trim();
-
-        if (timeInfo.length === 2 && days !== 'ARRANGED') {
-            const [startTime, endTime] = timeInfo;
-            const [startHours, startMinutes] = convertTo24Hour(startTime);
-            const [endHours, endMinutes] = convertTo24Hour(endTime);
-
-            let startDateInstance;
-            if (days.includes('M') && startDayOfWeek === 1) {
-                startDateInstance = new Date(startDate);
-            } else {
-                startDateInstance = getNextDayOfWeek(startDate, days.charAt(0));
-            }
-            startDateInstance.setHours(startHours, startMinutes, 0, 0);
-
-            const endDateInstance = new Date(startDateInstance);
-            endDateInstance.setHours(endHours, endMinutes, 0, 0);
-
-            const recurrenceDays = days !== 'N/A' && days !== '.' && days !== 'A' ?
-                days.split('').map(day => {
-                    switch (day.toUpperCase()) {
-                        case 'M': return 'MO';
-                        case 'T': return 'TU';
-                        case 'W': return 'WE';
-                        case 'R': return 'TH';
-                        case 'F': return 'FR';
-                        case 'S': return 'SA';
-                        case 'U': return 'SU';
-                        default: return '';
-                    }
-                }).filter(day => day !== '').join(',') : '';
-
-            const untilDate = endDate.toISOString().slice(0, 10).replace(/-/g, '');
-
-            const recurrenceRule = `RRULE:FREQ=WEEKLY;UNTIL=${untilDate};BYDAY=${recurrenceDays};WKST=SU;INTERVAL=1;BYHOUR=${startHours};BYMINUTE=${startMinutes}`;
-            
-            const event = {
-                summary: `${classInfo[0].trim()} ${classInfo[2].trim()}`,
-                location: location,
-                start: {
-                    dateTime: formatDateTime(startDateInstance),
-                    timeZone: 'America/Chicago'
-                },
-                end: {
-                    dateTime: formatDateTime(endDateInstance),
-                    timeZone: 'America/Chicago'
-                },
-                description: instructor,
-                recurrence: [
-                    recurrenceRule
-                ]
-            };
-
-            events.push(event);
-        }
-    }
-
-    return events;
-}
-
-function convertTo24Hour(time) {
-    const [hours, minutesPart] = time.split(':');
-    const minutes = minutesPart.substring(0, 2);
-    const period = minutesPart.substring(2).trim().toUpperCase();
-    let hours24 = parseInt(hours, 10);
-    if (period === 'PM' && hours24 < 12) hours24 += 12;
-    if (period === 'AM' && hours24 === 12) hours24 = 0;
-    return [hours24, parseInt(minutes, 10)];
-}
-
-function getNextDayOfWeek(date, day) {
-    const dayMap = { 'M': 1, 'T': 2, 'W': 3, 'R': 4, 'F': 5, 'S': 6, 'U': 0 };
-    const resultDate = new Date(date);
-    resultDate.setDate(date.getDate() + (dayMap[day] + 7 - date.getDay()) % 7);
-    return resultDate;
-}

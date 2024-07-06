@@ -9,12 +9,12 @@ body {
     font-family: Arial, sans-serif;
     margin: 0;
     padding: 0;
-    background-color: #13294B;
+    background-color: #13294B; /* Illini Blue */
     line-height: 1.6;
 }
 
 header {
-    background-color: #FF5F05;
+    background-color: #FF5F05; /* Illini Orange */
     color: #fff;
     text-align: center;
     padding: 10px 0;
@@ -72,7 +72,7 @@ button {
 }
 
 button:hover {
-    background-color: #0056b3;
+    background-color: #13294B;
 }
 
 .output-section {
@@ -98,14 +98,20 @@ footer {
     width: 100%;
 }
 
-@media (max-width: 600px) {
-    main {
-        padding: 10px;
-    }
+.hint-button {
+    padding: 5px 10px;
+    font-size: 12px;
+    background-color: #FF5F05;
+    color: white;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+}
 
-    textarea {
-        height: 100px;
-    }
+.hint-text {
+    color: #FF5F05; /* Change to desired color */
+    margin-top: 5px;
+    font-size: 14px;
 }
 
 .success-message {
@@ -116,4 +122,14 @@ footer {
 .error-message {
     color: red;
     font-weight: bold;
+}
+
+@media (max-width: 600px) {
+    main {
+        padding: 10px;
+    }
+
+    textarea {
+        height: 100px;
+    }
 }
