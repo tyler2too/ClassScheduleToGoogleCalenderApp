@@ -16,7 +16,7 @@ async function initializeGapiClient() {
         discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest'],
     });
     gapiInited = true;
-    maybeEnableButtons();
+    maybeEnableButton();
 }
 
 function gisLoaded() {
@@ -26,29 +26,28 @@ function gisLoaded() {
         callback: '', // defined later
     });
     gisInited = true;
-    maybeEnableButtons();
+    maybeEnableButton();
 }
 
-function maybeEnableButtons() {
+function maybeEnableButton() {
     if (gapiInited && gisInited) {
-        document.getElementById('authButton').style.display = 'block';
+        document.getElementById('submitButton').style.display = 'block';
     }
 }
 
-function handleAuthClick() {
+function handleAuthAndSubmitClick() {
+    parseSchedule(); // Parse the schedule and prepare the events
+
     tokenClient.callback = async (resp) => {
         if (resp.error !== undefined) {
             throw (resp);
         }
-        document.getElementById('signoutButton').style.display = 'block';
-        addEventsToCalendar();
+        addEventsToCalendar(); // Add events to the calendar after authorization
     };
 
     if (gapi.client.getToken() === null) {
-        // Prompt the user to select a Google Account and ask for consent to share their data
         tokenClient.requestAccessToken({prompt: 'consent'});
     } else {
-        // Skip display of account chooser and consent dialog for an existing session
         tokenClient.requestAccessToken({prompt: ''});
     }
 }
@@ -66,17 +65,12 @@ function handleSignoutClick() {
 async function addEventsToCalendar() {
     const events = JSON.parse(document.getElementById('output').innerText);
 
-    // Define an array of colorIds to cycle through
     const colorIds = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11'];
-    let colorIndex = 0; // Start with the first colorId
+    let colorIndex = 0;
 
     try {
         for (const event of events) {
-            // Set colorId for the event
-            event.colorId = colorIds[colorIndex % colorIds.length]; // Cycle through colors
-
-            // Add detailed logging for debugging
-            console.log('Event to be created:', event);
+            event.colorId = colorIds[colorIndex % colorIds.length];
 
             const response = await gapi.client.calendar.events.insert({
                 'calendarId': 'primary',
@@ -92,7 +86,7 @@ async function addEventsToCalendar() {
                 showMessage('error', 'Event creation failed. Please try again.');
             }
 
-            colorIndex++; // Move to the next colorId
+            colorIndex++;
         }
     } catch (error) {
         console.error('Error creating event', error);
@@ -111,17 +105,14 @@ function showMessage(type, message) {
     outputElement.appendChild(messageElement);
 }
 
-
 document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('authButton').onclick = handleAuthClick;
+    document.getElementById('submitButton').onclick = handleAuthAndSubmitClick;
     document.getElementById('signoutButton').onclick = handleSignoutClick;
     gapiLoaded();
     gisLoaded();
 });
 
-// Added this to fix UTC problems
 function formatDateTime(date) {
-    // Extract date components
     const year = date.getFullYear();
     const month = ('0' + (date.getMonth() + 1)).slice(-2);
     const day = ('0' + date.getDate()).slice(-2);
@@ -129,13 +120,11 @@ function formatDateTime(date) {
     const minutes = ('0' + date.getMinutes()).slice(-2);
     const seconds = ('0' + date.getSeconds()).slice(-2);
 
-    // Construct the formatted date-time string
     const formattedDateTime = `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
 
     return formattedDateTime;
 }
 
-// Main function to get data from the schedule
 function parseSchedule() {
     const startDateInput = document.getElementById('startDateInput').value;
     const endDateInput = document.getElementById('endDateInput').value;
@@ -146,8 +135,7 @@ function parseSchedule() {
     const lines = scheduleInput.split('\n').filter(line => line.trim() !== '');
     const events = [];
 
-    // Determine the day of the week for the start date
-    const startDayOfWeek = startDate.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+    const startDayOfWeek = startDate.getDay();
 
     for (let i = 0; i < lines.length; i += 7) {
         const classInfo = lines[i].split('\t');
@@ -161,23 +149,17 @@ function parseSchedule() {
             const [startHours, startMinutes] = convertTo24Hour(startTime);
             const [endHours, endMinutes] = convertTo24Hour(endTime);
 
-            // Calculate the start date instance based on the class day
-            // This fixed adding events a day before
             let startDateInstance;
             if (days.includes('M') && startDayOfWeek === 1) {
-                // If the class starts on Monday and start date is a Monday
                 startDateInstance = new Date(startDate);
             } else {
-                // Calculate the next occurrence of the class day
                 startDateInstance = getNextDayOfWeek(startDate, days.charAt(0));
             }
             startDateInstance.setHours(startHours, startMinutes, 0, 0);
 
-            // Calculate the end date instance
             const endDateInstance = new Date(startDateInstance);
             endDateInstance.setHours(endHours, endMinutes, 0, 0);
 
-            // Convert days to Google Calendar API BYDAY format (MO, TU, etc.)
             const recurrenceDays = days !== 'N/A' && days !== '.' && days !== 'A' ?
                 days.split('').map(day => {
                     switch (day.toUpperCase()) {
@@ -188,27 +170,24 @@ function parseSchedule() {
                         case 'F': return 'FR';
                         case 'S': return 'SA';
                         case 'U': return 'SU';
-                        default: return ''; // Handle unexpected cases
+                        default: return '';
                     }
                 }).filter(day => day !== '').join(',') : '';
 
-            // Calculate UNTIL date in YYYYMMDD format
             const untilDate = endDate.toISOString().slice(0, 10).replace(/-/g, '');
 
-            // Construct the RRULE with start time included
             const recurrenceRule = `RRULE:FREQ=WEEKLY;UNTIL=${untilDate};BYDAY=${recurrenceDays};WKST=SU;INTERVAL=1;BYHOUR=${startHours};BYMINUTE=${startMinutes}`;
-            // This got rid of the loop in earlier stages
             
             const event = {
                 summary: `${classInfo[0].trim()} ${classInfo[2].trim()}`,
                 location: location,
                 start: {
-                    dateTime: formatDateTime(startDateInstance), // Use dateTime without offset
-                    timeZone: 'America/Chicago' // Adjust timezone as needed
+                    dateTime: formatDateTime(startDateInstance),
+                    timeZone: 'America/Chicago'
                 },
                 end: {
-                    dateTime: formatDateTime(endDateInstance), // Use dateTime without offset
-                    timeZone: 'America/Chicago' // Adjust timezone as needed
+                    dateTime: formatDateTime(endDateInstance),
+                    timeZone: 'America/Chicago'
                 },
                 description: instructor,
                 recurrence: [
@@ -221,7 +200,7 @@ function parseSchedule() {
     }
 
     document.getElementById('output').innerText = JSON.stringify(events, null, 2);
-    document.getElementById('authButton').style.display = 'block';
+    document.getElementById('submitButton').style.display = 'block';
 }
 
 function convertTo24Hour(time) {
@@ -240,5 +219,3 @@ function getNextDayOfWeek(date, day) {
     resultDate.setDate(date.getDate() + (dayMap[day] + 7 - date.getDay()) % 7);
     return resultDate;
 }
-
-
