@@ -108,6 +108,22 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 
+function formatDateTime(date) {
+    // Extract date components
+    const year = date.getFullYear();
+    const month = ('0' + (date.getMonth() + 1)).slice(-2);
+    const day = ('0' + date.getDate()).slice(-2);
+    const hours = ('0' + date.getHours()).slice(-2);
+    const minutes = ('0' + date.getMinutes()).slice(-2);
+    const seconds = ('0' + date.getSeconds()).slice(-2);
+
+    // Construct the formatted date-time string
+    const formattedDateTime = `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
+
+    return formattedDateTime;
+}
+
+
 function parseSchedule() {
     const startDateInput = document.getElementById('startDateInput').value;
     const endDateInput = document.getElementById('endDateInput').value;
@@ -117,6 +133,20 @@ function parseSchedule() {
     const scheduleInput = document.getElementById('scheduleInput').value;
     const lines = scheduleInput.split('\n').filter(line => line.trim() !== '');
     const events = [];
+
+    // Function to convert time from AM/PM to 24-hour format
+    function convertTo24Hour(time) {
+        const [hours, minutesPart] = time.split(':');
+        const minutes = minutesPart.substring(0, 2);
+        const period = minutesPart.substring(2).trim().toUpperCase();
+        let hours24 = parseInt(hours, 10);
+        if (period === 'PM' && hours24 < 12) hours24 += 12;
+        if (period === 'AM' && hours24 === 12) hours24 = 0;
+        return [hours24, parseInt(minutes, 10)];
+    }
+
+    // Determine the day of the week for the start date
+    const startDayOfWeek = startDate.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
 
     for (let i = 0; i < lines.length; i += 7) {
         const classInfo = lines[i].split('\t');
@@ -130,10 +160,19 @@ function parseSchedule() {
             const [startHours, startMinutes] = convertTo24Hour(startTime);
             const [endHours, endMinutes] = convertTo24Hour(endTime);
 
-            // Ensure the startDateInstance and endDateInstance are set correctly
-            const startDateInstance = new Date(startDate);
+            // Calculate the start date instance based on the class day
+            let startDateInstance;
+            if (days.includes('M') && startDayOfWeek === 1) {
+                // If the class starts on Monday and start date is a Monday
+                startDateInstance = new Date(startDate);
+            } else {
+                // Calculate the next occurrence of the class day
+                startDateInstance = getNextDayOfWeek(startDate, days.charAt(0));
+            }
             startDateInstance.setHours(startHours, startMinutes, 0, 0);
-            const endDateInstance = new Date(startDate);
+
+            // Calculate the end date instance
+            const endDateInstance = new Date(startDateInstance);
             endDateInstance.setHours(endHours, endMinutes, 0, 0);
 
             // Convert days to Google Calendar BYDAY format (MO, TU, etc.)
@@ -161,11 +200,11 @@ function parseSchedule() {
                 summary: `${classInfo[0].trim()} ${classInfo[2].trim()}`,
                 location: location,
                 start: {
-                    dateTime: startDateInstance.toISOString().slice(0, 19), // Use dateTime instead of date
+                    dateTime: formatDateTime(startDateInstance), // Use dateTime without offset
                     timeZone: 'America/Chicago' // Adjust timezone as needed
                 },
                 end: {
-                    dateTime: endDateInstance.toISOString().slice(0, 19), // Use dateTime instead of date
+                    dateTime: formatDateTime(endDateInstance), // Use dateTime without offset
                     timeZone: 'America/Chicago' // Adjust timezone as needed
                 },
                 description: instructor,
@@ -198,3 +237,5 @@ function getNextDayOfWeek(date, day) {
     resultDate.setDate(date.getDate() + (dayMap[day] + 7 - date.getDay()) % 7);
     return resultDate;
 }
+
+
