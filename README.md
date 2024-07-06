@@ -8,3 +8,4 @@ Things to do
 - Improve quality of life, confirmation screen that it worked
 - Hide api key
 - change hardcoded timezone
+- hide json?

@@ -70,8 +70,8 @@ async function addEventsToCalendar() {
     const colorIds = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11'];
     let colorIndex = 0; // Start with the first colorId
 
-    for (const event of events) {
-        try {
+    try {
+        for (const event of events) {
             // Set colorId for the event
             event.colorId = colorIds[colorIndex % colorIds.length]; // Cycle through colors
 
@@ -86,19 +86,31 @@ async function addEventsToCalendar() {
             console.log('Event created: ', response);
             if (response.result) {
                 console.log('Event created: ' + response.result.htmlLink);
+                showMessage('success', 'Events added successfully!');
             } else {
                 console.error('Event creation failed: ', response);
+                showMessage('error', 'Event creation failed. Please try again.');
             }
 
             colorIndex++; // Move to the next colorId
-        } catch (error) {
-            console.error('Error creating event', error);
-            if (error.result) {
-                console.error('Detailed error:', error.result.error);
-            }
+        }
+    } catch (error) {
+        console.error('Error creating event', error);
+        showMessage('error', 'An error occurred while adding events. Please try again.');
+        if (error.result) {
+            console.error('Detailed error:', error.result.error);
         }
     }
 }
+
+function showMessage(type, message) {
+    const outputElement = document.getElementById('output');
+    const messageElement = document.createElement('div');
+    messageElement.classList.add(type === 'error' ? 'error-message' : 'success-message');
+    messageElement.textContent = message;
+    outputElement.appendChild(messageElement);
+}
+
 
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('authButton').onclick = handleAuthClick;
