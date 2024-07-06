@@ -4,11 +4,10 @@ so I am making an app/website for that.
 
 Things to do
 
-- Update asethetics
-- Improve quality of life, confirmation screen that it worked
-- Hide api key
-- change hardcoded timezone
-- hide json?
+- Hide api key (Top priority)
+- Update asethetics? (maybe)
+- Improve quality of life (eh)
+
 
 Privacy Policy
 - I will only access your google calender to add classes
