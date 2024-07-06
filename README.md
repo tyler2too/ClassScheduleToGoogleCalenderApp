@@ -7,3 +7,4 @@ Things to do
 - Update asethetics
 - Improve quality of life, confirmation screen that it worked
 - Hide api key
+- change hardcoded timezone
