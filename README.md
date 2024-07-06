@@ -4,7 +4,6 @@ so I am making an app/website for that.
 
 Things to do
 
-- Hide api key (Top priority)
 - Update asethetics? (maybe)
 - Improve quality of life (eh)
 
