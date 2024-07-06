@@ -96,7 +96,6 @@ function showMessage(type, message) {
 
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('submitButton').onclick = handleAuthAndSubmitClick;
-    document.getElementById('signoutButton').onclick = handleSignoutClick;
     gapiLoaded();
     gisLoaded();
 });
