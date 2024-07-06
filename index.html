@@ -1,40 +1,65 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Class Schedule to Google Calendar</title>
     <link rel="stylesheet" href="style.css">
-    
 </head>
 <body onload="gapiLoaded(); gisLoaded();">
-    <h1>Class Schedule to Google Calendar</h1>
-    <p>
-        <ol>
-            <li>Get your schedule from <a href="https://courses.illinois.edu//"> https://courses.illinois.edu// </a></li>
-            <li>Log in then go to my.Courses on the right</li>
-            <li>Copy and paste your schedule in the box</li>
-            <li>Click the submit button</li>
-            <li>Then authorize your google account to add it to your calender </li>
+    <header>
+        <h1>UIUC Class Schedule to Google Calendar</h1>
+    </header>
+    <main>
+        <section class="instructions">
+            <h2>Instructions:</h2>
+            <ol>
+                <li>Get your schedule from <a href="https://courses.illinois.edu//">courses.illinois.edu</a></li>
+                <li>Log in then go to my.Courses on the right</li>
+                <li>Copy and paste your schedule in the box below</li>
+                <li>Enter the start and end dates of your class schedule</li>
+                <li>Click the submit button to add your classes to Google Calendar</li>
+                <li>Authorize your Google account to add the schedule to your calendar</li>
+            </ol>
+        </section>
 
-        </ol>
-        
-    </p>
-    <form id="scheduleForm">
-       
-        
-        <label for="scheduleInput">Paste your class schedule:</label><br>
-        <textarea id="scheduleInput"></textarea><br><br>
+        <section class="form-section">
+            <form id="scheduleForm">
+                <label for="scheduleInput">Paste your class schedule:</label><br>
+                <textarea id="scheduleInput" placeholder="Paste your class schedule here..." required></textarea><br><br>
 
-        <label for="startDateInput">First day of class:</label><br>
-        <input type="date" id="startDateInput" required><br><br>
-        
-        <label for="endDateInput">Last day of class (add one more to last day EX: 05/15 -> put 05/16):</label><br>
-        <input type="date" id="endDateInput" required><br><br>
+                <label for="startDateInput">First day of class:</label><br>
+                <input type="date" id="startDateInput" required><br><br>
+                
+                <label for="endDateInput">Last day of class (add one more day to the last day):</label><br>
+                <input type="date" id="endDateInput" required><br><br>
 
-        <button type="button" onclick="parseSchedule()">Submit</button>
-    </form>
-    <div id="output"></div>
-    <button id="authButton" style="display: none;">Authorize Google Calendar</button>
-    <button id="signoutButton" style="display: none;">Sign Out</button>
+                <button type="button" onclick="parseSchedule()">Submit</button>
+            </form>
+        </section>
+
+        <section id="output" class="output-section"></section>
+
+        <section class="buttons-section">
+            <button id="authButton" style="display: none;">Authorize Google Calendar</button>
+            <button id="signoutButton" style="display: none;">Sign Out</button>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 
+            Tyler Too
+            |
+            <a href="https://www.linkedin.com/in/tylertoo/">Linkedin</a>
+            |
+            <a href="https://github.com/tyler2too/ClassScheduleToGoogleCalenderApp">Github</a>
+            |
+            
+            hi :)
+
+        </p>
+    </footer>
+
     <script src="https://apis.google.com/js/api.js"></script>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script src="script.js"></script>
