@@ -19,15 +19,17 @@
         
     </p>
     <form id="scheduleForm">
-        <label for="startDateInput">Start Date:</label><br>
-        <input type="date" id="startDateInput" required><br><br>
-        
-        <label for="endDateInput">End Date:</label><br>
-        <input type="date" id="endDateInput" required><br><br>
+       
         
         <label for="scheduleInput">Paste your class schedule:</label><br>
         <textarea id="scheduleInput"></textarea><br><br>
+
+        <label for="startDateInput">First day of class:</label><br>
+        <input type="date" id="startDateInput" required><br><br>
         
+        <label for="endDateInput">Last day of class (add one more to last day EX: 05/15 -> put 05/16):</label><br>
+        <input type="date" id="endDateInput" required><br><br>
+
         <button type="button" onclick="parseSchedule()">Submit</button>
     </form>
     <div id="output"></div>

@@ -107,7 +107,7 @@ document.addEventListener('DOMContentLoaded', () => {
     gisLoaded();
 });
 
-
+// Added this to fix UTC problems
 function formatDateTime(date) {
     // Extract date components
     const year = date.getFullYear();
@@ -123,7 +123,7 @@ function formatDateTime(date) {
     return formattedDateTime;
 }
 
-
+// Main function to get data from the schedule
 function parseSchedule() {
     const startDateInput = document.getElementById('startDateInput').value;
     const endDateInput = document.getElementById('endDateInput').value;
@@ -133,17 +133,6 @@ function parseSchedule() {
     const scheduleInput = document.getElementById('scheduleInput').value;
     const lines = scheduleInput.split('\n').filter(line => line.trim() !== '');
     const events = [];
-
-    // Function to convert time from AM/PM to 24-hour format
-    function convertTo24Hour(time) {
-        const [hours, minutesPart] = time.split(':');
-        const minutes = minutesPart.substring(0, 2);
-        const period = minutesPart.substring(2).trim().toUpperCase();
-        let hours24 = parseInt(hours, 10);
-        if (period === 'PM' && hours24 < 12) hours24 += 12;
-        if (period === 'AM' && hours24 === 12) hours24 = 0;
-        return [hours24, parseInt(minutes, 10)];
-    }
 
     // Determine the day of the week for the start date
     const startDayOfWeek = startDate.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
@@ -161,6 +150,7 @@ function parseSchedule() {
             const [endHours, endMinutes] = convertTo24Hour(endTime);
 
             // Calculate the start date instance based on the class day
+            // This fixed adding events a day before
             let startDateInstance;
             if (days.includes('M') && startDayOfWeek === 1) {
                 // If the class starts on Monday and start date is a Monday
@@ -175,7 +165,7 @@ function parseSchedule() {
             const endDateInstance = new Date(startDateInstance);
             endDateInstance.setHours(endHours, endMinutes, 0, 0);
 
-            // Convert days to Google Calendar BYDAY format (MO, TU, etc.)
+            // Convert days to Google Calendar API BYDAY format (MO, TU, etc.)
             const recurrenceDays = days !== 'N/A' && days !== '.' && days !== 'A' ?
                 days.split('').map(day => {
                     switch (day.toUpperCase()) {
@@ -195,7 +185,8 @@ function parseSchedule() {
 
             // Construct the RRULE with start time included
             const recurrenceRule = `RRULE:FREQ=WEEKLY;UNTIL=${untilDate};BYDAY=${recurrenceDays};WKST=SU;INTERVAL=1;BYHOUR=${startHours};BYMINUTE=${startMinutes}`;
-
+            // This got rid of the loop in earlier stages
+            
             const event = {
                 summary: `${classInfo[0].trim()} ${classInfo[2].trim()}`,
                 location: location,
