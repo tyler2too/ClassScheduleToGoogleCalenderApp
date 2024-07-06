@@ -35,36 +35,24 @@ function maybeEnableButton() {
     }
 }
 
-function handleAuthAndSubmitClick() {
-    parseSchedule(); // Parse the schedule and prepare the events
+async function handleAuthAndSubmitClick() {
+    const events = parseSchedule(); // Parse the schedule and prepare the events
 
     tokenClient.callback = async (resp) => {
         if (resp.error !== undefined) {
             throw (resp);
         }
-        addEventsToCalendar(); // Add events to the calendar after authorization
+        await addEventsToCalendar(events); // Add events to the calendar after authorization
     };
 
     if (gapi.client.getToken() === null) {
-        tokenClient.requestAccessToken({prompt: 'consent'});
+        tokenClient.requestAccessToken({ prompt: 'consent' });
     } else {
-        tokenClient.requestAccessToken({prompt: ''});
+        tokenClient.requestAccessToken({ prompt: '' });
     }
 }
 
-function handleSignoutClick() {
-    const token = gapi.client.getToken();
-    if (token !== null) {
-        google.accounts.oauth2.revoke(token.access_token, () => {
-            gapi.client.setToken('');
-            document.getElementById('signoutButton').style.display = 'none';
-        });
-    }
-}
-
-async function addEventsToCalendar() {
-    const events = JSON.parse(document.getElementById('output').innerText);
-
+async function addEventsToCalendar(events) {
     const colorIds = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11'];
     let colorIndex = 0;
 
@@ -96,6 +84,7 @@ async function addEventsToCalendar() {
         }
     }
 }
+
 
 function showMessage(type, message) {
     const outputElement = document.getElementById('output');
@@ -199,8 +188,7 @@ function parseSchedule() {
         }
     }
 
-    document.getElementById('output').innerText = JSON.stringify(events, null, 2);
-    document.getElementById('submitButton').style.display = 'block';
+    return events;
 }
 
 function convertTo24Hour(time) {
