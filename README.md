@@ -9,6 +9,7 @@ Things to do
 
 - Update aesthetics? (maybe)
 - Improve quality of life (eh)
+- Automate the start and end dates?
 
 
 Credit
