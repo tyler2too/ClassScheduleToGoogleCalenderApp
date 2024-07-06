@@ -11,6 +11,8 @@ Things to do
 - Improve quality of life (eh)
 - Automate the start and end dates?
 
+Website
+https://tyler2too.github.io/ClassScheduleToGoogleCalenderApp/
 
 Credit
 http://www.uiuccalendar.appspot.com/
