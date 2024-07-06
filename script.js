@@ -1,5 +1,5 @@
 const CLIENT_ID = '972247015927-uocb4ika9mn940knj91qk6e7r1edsc3i.apps.googleusercontent.com';
-const API_KEY = 'AIzaSyAAIFD7oJZMGXdAH84VeYcFFs1MtAqpoD0';
+const API_KEY = 'AIzaSyD8eZ_7kBv8Ge--q9UkqQuWt5C29nOxty4';
 const SCOPES = 'https://www.googleapis.com/auth/calendar.events';
 
 let tokenClient;
