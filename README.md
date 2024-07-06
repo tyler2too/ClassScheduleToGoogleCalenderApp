@@ -1,6 +1,6 @@
--I have no internship so might as well make a personal project.
--I looked from problems to solve and one of them was the time commitment of manually inputting of class schedules.
--I have always manually entered class schedules into google calendar and I want to be able to copy and paste.
+- I have no internship so might as well make a personal project.
+- I looked from problems to solve and one of them was the time commitment of manually inputting of class schedules.
+- I have always manually entered class schedules into google calendar and I want to be able to copy and paste.
 So I created this.
 
 
