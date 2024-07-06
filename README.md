@@ -9,3 +9,6 @@ Things to do
 - Hide api key
 - change hardcoded timezone
 - hide json?
+
+Privacy Policy
+- I will only access your google calender to add classes
