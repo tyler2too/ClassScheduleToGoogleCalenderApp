@@ -149,20 +149,68 @@ function parseSchedule() {
 
     const startDayOfWeek = startDate.getDay();
 
-    for (let i = 0; i < lines.length; i += 7) {        // Parse schedule
-        const classInfo = lines[i].split('\t');
-        const timeInfo = lines[i + 3].split(' - ');
-        const days = lines[i + 4].trim();
-        const location = lines[i + 5].trim();
-        const instructor = lines[i + 6].trim();
+    for (let i = 0; i < lines.length; i += 7) {
+        // Ensure at least 7 lines are available
+        if (i + 7 > lines.length) {
+            console.error(`Incomplete data at line ${i}. Expected at least 7 lines.`);
+            continue;
+        }
+
+        let classInfo = lines[i].split(/\s{2,}/); // Split by two or more spaces
+
+        // If split by multiple spaces yields insufficient info, try splitting by tab
+        if (!classInfo || classInfo.length < 2) {
+            classInfo = lines[i].split('\t'); // Split by tab if necessary
+        }
+
+        // Check if classInfo has enough elements
+        if (!classInfo || classInfo.length < 2) {
+            console.error(`Incomplete class info at line ${i}. Skipping event creation. Class Info: `, classInfo);
+            continue;
+        }
+
+        // Ensure that timeInfo, days, location, and instructorLine are defined and not empty
+        const timeInfoLine = lines[i + 3];
+        const daysLine = lines[i + 4];
+        const locationLine = lines[i + 5];
+        let instructorLine = lines[i + 6];
+
+        // Check if instructorLine is correctly assigned
+        if (!instructorLine.includes(',')) {
+            // If instructorLine doesn't contain a comma, treat it as part of the next classInfo
+            //classInfo.push(instructorLine); // Add instructorLine to classInfo
+            instructorLine = 'N/A'; // Set instructorLine to 'N/A' for current event
+            i--;
+        }
+
+        if (!timeInfoLine || !daysLine || !locationLine || !instructorLine) {
+            console.error(`Missing data at line ${i}. Skipping event creation.`);
+            continue;
+        }
+
+        const summary = `${classInfo[0].trim()}`;
+        const timeInfo = timeInfoLine.split(' - ');
+        const days = daysLine.trim();
+        const location = locationLine.trim();
+        let instructor = instructorLine.trim();
+
+        // Handle cases where instructor is missing or incorrectly formatted
+        if (!instructor || instructor === 'n.a') {
+            instructor = 'N/A';
+        }
+
+        // Log classInfo and other relevant details for debugging
+        console.log(`Class Info at line ${i}: `, classInfo);
+        console.log(`Time Info at line ${i}: `, timeInfoLine);
+        console.log(`Days at line ${i}: `, daysLine);
+        console.log(`Location at line ${i}: `, locationLine);
+        console.log(`Instructor at line ${i}: `, instructorLine);
 
         if (timeInfo.length === 2 && days !== 'ARRANGED') {
             const [startTime, endTime] = timeInfo;
             const [startHours, startMinutes] = convertTo24Hour(startTime);
             const [endHours, endMinutes] = convertTo24Hour(endTime);
 
-            // Starts schedule where user chooses
-            // This is so classes arent created on the same day
             let startDateInstance;
             if (days.includes('M') && startDayOfWeek === 1) {
                 startDateInstance = new Date(startDate);
@@ -174,7 +222,7 @@ function parseSchedule() {
             const endDateInstance = new Date(startDateInstance);
             endDateInstance.setHours(endHours, endMinutes, 0, 0);
 
-            const recurrenceDays = days !== 'N/A' && days !== '.' && days !== 'A' ? // Change to Google Cal API format
+            const recurrenceDays = days !== 'N/A' && days !== '.' && days !== 'A' ?
                 days.split('').map(day => {
                     switch (day.toUpperCase()) {
                         case 'M': return 'MO';
@@ -189,12 +237,12 @@ function parseSchedule() {
                 }).filter(day => day !== '').join(',') : '';
 
             const untilDate = endDate.toISOString().slice(0, 10).replace(/-/g, '');
-            
-            // Google Cal API feature to create event specifics 
+
             const recurrenceRule = `RRULE:FREQ=WEEKLY;UNTIL=${untilDate};BYDAY=${recurrenceDays};WKST=SU;INTERVAL=1;BYHOUR=${startHours};BYMINUTE=${startMinutes}`;
-            
+
+            // Create events with proper summary, location, start time, end time, etc.
             const event = {
-                summary: `${classInfo[0].trim()} ${classInfo[2].trim()}`,
+                summary: summary,
                 location: location,
                 start: {
                     dateTime: formatDateTime(startDateInstance),
@@ -210,12 +258,21 @@ function parseSchedule() {
                 ]
             };
 
+            // Log event details when event is successfully created
+            console.log(`Event created for class info at line ${i}: `, event);
+
             events.push(event);
         }
     }
 
     return events;
 }
+
+
+
+
+
+
 
 
 //
