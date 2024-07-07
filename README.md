@@ -1,8 +1,5 @@
 UIUC class schedule to Google Calender
-- I have no internship so might as well make a personal project.
-- I looked from problems to solve and one of them was the time commitment of manually inputting of class schedules.
-- I have always manually entered class schedules into google calendar and I want to be able to copy and paste.
-So I created this.
+- I identified a personal problem: the time-consuming task of manually entering class schedules into Google Calendar. To solve this, I created a website that allows users to copy and paste their class schedules directly, streamlining the process of adding classes to Google Calendar.
 
 
 Things to do
@@ -12,7 +9,10 @@ Things to do
 - Automate the start and end dates?
 
 Website
-https://tyler2too.github.io/ClassScheduleToGoogleCalenderApp/
+- https://tyler2too.github.io/ClassScheduleToGoogleCalenderApp/
+
+How I made it
+- https://www.youtube.com/watch?v=i2e1SCakHhQ
 
 Credit
 http://www.uiuccalendar.appspot.com/
