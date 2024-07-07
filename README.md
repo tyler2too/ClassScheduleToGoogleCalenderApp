@@ -4,6 +4,7 @@ UIUC class schedule to Google Calender
 
 Things to do
 
+- Need to fix when there is online and inperson class (priority)
 - Update aesthetics? (maybe)
 - Improve quality of life (eh)
 - Automate the start and end dates?
