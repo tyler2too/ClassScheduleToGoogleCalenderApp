@@ -13,10 +13,13 @@
 //
 /////////////////////////
 
+// Loading the environment variables from .env file
+require('dotenv').config();
 
-const CLIENT_ID = '972247015927-uocb4ika9mn940knj91qk6e7r1edsc3i.apps.googleusercontent.com';
-const API_KEY = 'AIzaSyD8eZ_7kBv8Ge--q9UkqQuWt5C29nOxty4'; // Please dont hack me (It's restricted through google)
-const SCOPES = 'https://www.googleapis.com/auth/calendar.events';
+// Access environment variables
+const CLIENT_ID = process.env.CLIENT_ID;
+const API_KEY = process.env.API_KEY;
+const SCOPES = process.env.SCOPES;
 
 let tokenClient;            // OAuth 2.0 token (user authentication)
 let gapiInited = false;     // Check for Google API library initialization
