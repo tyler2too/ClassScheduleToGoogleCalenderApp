@@ -15,7 +15,7 @@ How I made it
 - https://www.youtube.com/watch?v=i2e1SCakHhQ
 
 Credit
-http://www.uiuccalendar.appspot.com/
+- http://www.uiuccalendar.appspot.com/
 However it was made 10 years ago and it didn't work for me
 
 Privacy Policy
