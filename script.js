@@ -88,7 +88,8 @@ function showMessage(type, message) {
 }
 
 
-function toggleHint() {
+function toggleHint(event) {
+    event.preventDefault(); // Prevents refreshing the page if user fills out form and clicks hint
     const hintText = document.getElementById('hintText');
     if (hintText.style.display === 'none') {
         hintText.style.display = 'block';
