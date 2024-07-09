@@ -4,6 +4,7 @@ UIUC class schedule to Google Calender
 
 Things to do
 
+- Need to address some edge cases (Same class, different lab/lecture)
 - Add new landing page
 - On landing page be able to choose school (add UIC)
 - Need to fix when there is online and inperson class (priority)
