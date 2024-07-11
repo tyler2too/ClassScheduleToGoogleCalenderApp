@@ -5,7 +5,7 @@ UIUC class schedule to Google Calender
 Things to do
 
 - On landing page be able to choose school (maybe add more schools?)
-- Schools:
+- Schools it works for:
 - UIUC
 - UIC
 - Update aesthetics? (maybe)
