@@ -170,8 +170,13 @@ function parseSchedule() {
         console.log(`timeInfoLine `, timeInfoLine);
         console.log(`locationLine: `, locationLine);
 
+        if (timeInfoLine.includes('Online')) {
+            console.log(`online ONLINE: `, lines[i + 3]);
+            i -= 1; // Hard coded for Online Sections, may need to change
+            continue;
+        }
         if (daysLine === '') {
-            console.log(`hhhhhhhhhh: `, lines[i + 2]);
+            console.log(`honors ACTIVITY: `, lines[i + 2]);
             i -= 2; // Hard coded for Honors Activity 222, may need to change
             continue;
         }
