@@ -1,3 +1,4 @@
+// UIC
 /////////////////////////
 //
 // Class Schedule To Google Calendar
@@ -136,7 +137,7 @@ function getNextDayOfWeek(date, day) {
 
 
 //
-// Main script for getting the Class Schedule to Google Cal
+// Main script for getting the Class Schedule to Google Calendar
 //
 function parseSchedule() {
     const startDateInput = document.getElementById('startDateInput').value;
@@ -148,110 +149,51 @@ function parseSchedule() {
     const lines = scheduleInput.split('\n').filter(line => line.trim() !== '');
     const events = [];
 
-    const startDayOfWeek = startDate.getDay();
+    for (let i = 0; i < lines.length; i += 4) {
+        console.log(`hiiiiiiii: `, lines[i]);
 
-    for (let i = 0; i < lines.length; i += 7) {
-        // Ensure at least 7 lines are available
-        if (i + 7 > lines.length) {
-            console.error(`Incomplete data at line ${i}. Expected at least 7 lines.`);
+        if (i + 4 > lines.length) {
+            console.error(`Incomplete data at line ${i + 1}. Expected at least 4 lines.`);
             continue;
         }
 
-        let classInfo = lines[i].split(/\s{2,}/); // Split by two or more spaces
+        const courseInfoLine = lines[i].trim(); // e.g., ART 151: LAB
 
-        // If split by multiple spaces yields insufficient info, try splitting by tab
-        if (!classInfo || classInfo.length < 2) {
-            classInfo = lines[i].split('\t'); // Split by tab if necessary
-        }
+        let parts = lines[i+1].split(/\t+/);
+        const daysLine = parts[parts.length - 1].trim();   // e.g., M, W
 
-        // Check if classInfo has enough elements
-        if (!classInfo || classInfo.length < 2) {
-            console.error(`Incomplete class info at line ${i}. Skipping event creation. Class Info: `, classInfo);
+        const timeInfoLine = lines[i + 2].trim(); // e.g., 4:51 PM - 6:30 PM
+        const locationLine = lines[i + 3].trim(); // e.g., 3204 Art & Exhibition Hall
+
+        console.log(`courseInfo: `, courseInfoLine);
+        console.log(`daysLine `, daysLine);
+        console.log(`timeInfoLine `, timeInfoLine);
+        console.log(`locationLine: `, locationLine);
+
+        if (daysLine === '') {
+            console.log(`hhhhhhhhhh: `, lines[i + 2]);
+            i -= 2; // Hard coded for Honors Activity 222, may need to change
             continue;
         }
 
-        // Handle the edge case of same class but has lab and lecture
-        if (lines[i + 1] === 'Labratory' || lines[i + 2] === 'Lecture' || lines[i + 2] === 'Online') {
-            console.log(`Class Info at line ${i + 1}: `, lines[i + 1]);
-            console.log(`Class Info at line ${i + 2}: `, lines[i + 2]);
-
-            const labTimeInfo = lines[i + 5];
-            const lectureTimeInfo = lines[i + 6];
-            const labDays = lines[i + 7];
-            const lectureDays = lines[i + 8];
-            const labLocation = lines[i + 9];
-            const lectureLocation = lines[i + 10];
-            const labInstructor = lines[i + 11];
-            const lectureInstructor = lines[i + 12];
-
-            console.log(`Lecture Time Info: `, lectureTimeInfo);
-            console.log(`Lecture Days: `, lectureDays);
-            console.log(`Lecture Location: `, lectureLocation);
-            console.log(`Lecture Instructor: `, lectureInstructor);
-
-            console.log(`Lab Time Info: `, labTimeInfo);
-            console.log(`Lab Days: `, labDays);
-            console.log(`Lab Location: `, labLocation);
-            console.log(`Lab Instructor: `, labInstructor);
-
-            // Create event for lecture
-            createEvent({
-                summary: `${classInfo[0].trim()} Lecture`,
-                timeInfo: lectureTimeInfo,
-                days: lectureDays,
-                location: lectureLocation,
-                instructor: lectureInstructor,
-                startDate,
-                endDate,
-                startDayOfWeek,
-                events
-            });
-
-            // Create event for lab
-            createEvent({
-                summary: `${classInfo[0].trim()} Lab`,
-                timeInfo: labTimeInfo,
-                days: labDays,
-                location: labLocation,
-                instructor: labInstructor,
-                startDate,
-                endDate,
-                startDayOfWeek,
-                events
-            });
-
-            i += 6; // Skip to the next set of lines
+        // Parse course information
+        const courseParts = courseInfoLine.split(':');
+        if (courseParts.length < 2) {
+            console.error(`Invalid course info format at line ${i + 1}. Skipping event creation.`);
             continue;
         }
 
-        // Regular case if not lab and lecture combo
-        const timeInfoLine = lines[i + 3];
-        const daysLine = lines[i + 4];
-        const locationLine = lines[i + 5];
-        let instructorLine = lines[i + 6];
-
-        // Check if instructorLine is correctly assigned
-        if (!instructorLine.includes(',')) {
-            // If instructorLine doesn't contain a comma, treat it as part of the next classInfo
-            instructorLine = 'N/A'; // Set instructorLine to 'N/A' for current event
-            i--;
-        }
-
-        if (!timeInfoLine || !daysLine || !locationLine || !instructorLine) {
-            console.error(`Missing data at line ${i}. Skipping event creation.`);
-            continue;
-        }
+        const courseCode = courseParts[0].trim();
+        const type = courseParts[1].trim(); // LAB, LEC, LCD, etc.
 
         createEvent({
-            summary: `${classInfo[0].trim()}`,
+            summary: `${courseCode} ${type}`,
             timeInfo: timeInfoLine,
-            days: daysLine.trim(),
-            location: locationLine.trim(),
-            instructor: instructorLine.trim(),
-            startDate,
-            endDate,
-            startDayOfWeek,
-            events
+            days: daysLine,
+            location: locationLine,
+            startDate: startDate,
+            endDate: endDate,
+            events: events
         });
     }
 
@@ -260,66 +202,64 @@ function parseSchedule() {
 
 
 //
-// Separated createEvent to a function for better usage and readability
+// Separated createEvent function for better usage and readability
 //
-function createEvent({ summary, timeInfo, days, location, instructor, startDate, endDate, startDayOfWeek, events }) {
-    const timeInfoSplit = timeInfo.split(' - ');
-
-    if (timeInfoSplit.length === 2 && days !== 'ARRANGED') {
-        const [startTime, endTime] = timeInfoSplit;
-        const [startHours, startMinutes] = convertTo24Hour(startTime);
-        const [endHours, endMinutes] = convertTo24Hour(endTime);
-
-        let startDateInstance;
-        if (days.includes('M') && startDayOfWeek === 1) {
-            startDateInstance = new Date(startDate);
-        } else {
-            startDateInstance = getNextDayOfWeek(startDate, days.charAt(0));
-        }
-        startDateInstance.setHours(startHours, startMinutes, 0, 0);
-
-        const endDateInstance = new Date(startDateInstance);
-        endDateInstance.setHours(endHours, endMinutes, 0, 0);
-
-        const recurrenceDays = days !== 'N/A' && days !== '.' && days !== 'A' ?
-            days.split('').map(day => {
-                switch (day.toUpperCase()) {
-                    case 'M': return 'MO';
-                    case 'T': return 'TU';
-                    case 'W': return 'WE';
-                    case 'R': return 'TH';
-                    case 'F': return 'FR';
-                    case 'S': return 'SA';
-                    case 'U': return 'SU';
-                    default: return '';
-                }
-            }).filter(day => day !== '').join(',') : '';
-
-        const untilDate = endDate.toISOString().slice(0, 10).replace(/-/g, '');
-
-        const recurrenceRule = `RRULE:FREQ=WEEKLY;UNTIL=${untilDate};BYDAY=${recurrenceDays};WKST=SU;INTERVAL=1;BYHOUR=${startHours};BYMINUTE=${startMinutes}`;
-
-        const event = {
-            summary: summary,
-            location: location,
-            start: {
-                dateTime: formatDateTime(startDateInstance),
-                timeZone: 'America/Chicago'
-            },
-            end: {
-                dateTime: formatDateTime(endDateInstance),
-                timeZone: 'America/Chicago'
-            },
-            description: instructor,
-            recurrence: [
-                recurrenceRule
-            ]
-        };
-
-        console.log(`Event created: `, event);
-
-        events.push(event);
+function createEvent({ summary, timeInfo, days, location, startDate, endDate, events }) {
+    const timeParts = timeInfo.split(' - ');
+    if (timeParts.length !== 2) {
+        console.error(`Invalid time format: ${timeInfo}. Skipping event creation.`);
+        return;
     }
+
+    const startTime = timeParts[0].trim();
+    const endTime = timeParts[1].trim();
+
+    const [startHours, startMinutes] = convertTo24Hour(startTime);
+    const [endHours, endMinutes] = convertTo24Hour(endTime);
+
+    days = days.split(',').map(day => {
+        switch (day.trim()) {
+            case 'M': return 'MO';
+            case 'T': return 'TU';
+            case 'W': return 'WE';
+            case 'R': return 'TH';
+            case 'F': return 'FR';
+            case 'S': return 'SA';
+            case 'U': return 'SU';
+            default: return '';
+        }
+    }).filter(day => day !== '').join(',');
+
+    const startDateInstance = getNextDayOfWeek(startDate, days.charAt(0)); // starts with M, W format
+    startDateInstance.setHours(startHours, startMinutes, 0, 0);
+
+    const endDateInstance = new Date(startDateInstance);
+    endDateInstance.setHours(endHours, endMinutes, 0, 0);
+
+    const recurrenceDays = days;
+
+    const untilDate = endDate.toISOString().slice(0, 10).replace(/-/g, '');
+
+    const recurrenceRule = `RRULE:FREQ=WEEKLY;UNTIL=${untilDate};BYDAY=${recurrenceDays};WKST=SU;INTERVAL=1;BYHOUR=${startHours};BYMINUTE=${startMinutes}`;
+
+    const event = {
+        summary: summary,
+        location: location,
+        start: {
+            dateTime: formatDateTime(startDateInstance),
+            timeZone: 'America/Chicago'
+        },
+        end: {
+            dateTime: formatDateTime(endDateInstance),
+            timeZone: 'America/Chicago'
+        },
+        recurrence: [
+            recurrenceRule
+        ]
+    };
+
+    console.log(`Event created: `, event);
+    events.push(event);
 }
 
 
