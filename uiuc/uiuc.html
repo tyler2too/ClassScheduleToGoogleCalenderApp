@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Class Schedule to Google Calendar</title>
+    <link rel="stylesheet" href="uiucStyle.css">
+</head>
+
+<body onload="gapiLoaded(); gisLoaded();">
+    <header>
+        <h1>UIUC Class Schedule to Google Calendar</h1>
+    </header>
+    <main>
+
+        <section class="instructions">
+            <h2>Instructions:</h2>
+            <ol>
+                <li>Get your schedule from <a href="https://courses.illinois.edu//">courses.illinois.edu</a></li>
+                <li>Log in</li>
+                <li>Then go to my.Courses on the right</li>
+                <li>Copy and paste your schedule in the box below</li>
+                <li>Enter the start and end dates of your class schedule</li>
+                <li>Authorize your Google account to add the schedule to your calendar</li>
+                <li>If there is a warning, click advanced and click "Go to tyler2too.github.io(unsafe)"</li>
+            </ol>
+        </section>
+
+        <section class="form-section">
+            <form id="scheduleForm">
+                <label for="scheduleInput">Paste your class schedule:</label><br>
+                <textarea id="scheduleInput" placeholder="Paste your class schedule here... " required></textarea><br><br>
+        
+                <label for="startDateInput">First day of class:</label><br>
+                <input type="date" id="startDateInput" required><br><br>
+                
+                <label for="endDateInput">Last day of class (add one more day to the last day) 
+                    <section class="hint-section">
+                        <button id="hintButton" class="hint-button">Show Hint</button>
+                        <div id="hintText" class="hint-text" style="display: none;">
+                            Example: If Johhny has his last class on Friday the 13th, then he would put Saturday the 14th. If Johnny put Friday the 13th, then the schedule will cut off on Friday and the last day will be Thursday. Ok enjoy :)
+                        </div>
+                    </section>
+                </label><br>
+                <input type="date" id="endDateInput" required><br><br>
+                <button type="button" id="submitButton">Submit and Authorize</button>
+            </form>
+        </section>
+
+        <section id="output" class="output-section"></section>
+        <section class="buttons-section">
+            <button id="authButton" style="display: none;">Authorize Google Calendar</button>
+        </section>
+        <section id="output" class="output-section"></section>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 
+            Tyler Too
+            |
+            <a href="https://www.linkedin.com/in/tylertoo/">Linkedin</a>
+            |
+            <a href="https://github.com/tyler2too/ClassScheduleToGoogleCalenderApp">Github</a>
+            |
+            <a href="https://www.youtube.com/watch?v=i2e1SCakHhQ">How I made it / Tutorial</a>
+            |
+            hi :)
+        </p>
+    </footer>
+
+    <script src="https://apis.google.com/js/api.js"></script>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="uiucScript.js"></script>
+</body>
+</html>
